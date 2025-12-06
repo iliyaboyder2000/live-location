@@ -1,0 +1,25 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📍 نمایش موقعیت</title>
+    <style>
+        body { font-family: sans-serif; text-align: center; padding: 20px; }
+        #map { width: 90%; height: 400px; margin: 20px auto; border: 2px solid #333; }
+    </style>
+</head>
+<body>
+    <h1>📍 موقعیت زنده کاربر</h1>
+    <div id="map">نقشه در حال بارگذاری...</div>
+    <p id="status">در انتظار دریافت موقعیت...</p>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        socket.on('update', (data) => {
+            document.getElementById('status').innerHTML = 
+                `آخرین موقعیت: ${data.lat}, ${data.lng}`;
+            console.log('موقعیت دریافت شد:', data);
+        });
+    </script>
+</body>
+</html>

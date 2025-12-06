@@ -1,0 +1,41 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>📱 ارسال موقعیت</title>
+    <style>
+        body { font-family: sans-serif; padding: 20px; }
+        button { padding: 15px; font-size: 18px; margin: 10px; }
+    </style>
+</head>
+<body>
+    <h1>📱 ارسال موقعیت من</h1>
+    <button onclick="sendLocation()">📍 منو ساحل</button>
+    <p id="status">روی دکمه بالا بزن</p>
+
+    <script src="/socket.io/socket.io.js"></script>
+    <script>
+        const socket = io();
+        const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+
+        function sendLocation() {
+            if (!navigator.geolocation) {
+                alert('مرورگر شما GPS را ساپورت نمی‌کند!');
+                return;
+            }
+
+            navigator.geolocation.getCurrentPosition((pos) => {
+                const location = {
+                    userId: userId,
+                    lat: pos.coords.latitude,
+                    lng: pos.coords.longitude,
+                    time: new Date().toLocaleTimeString()
+                };
+
+                socket.emit('location', location);
+                document.getElementById('status').innerHTML = 
+                    `ارسال شد: ${location.lat}, ${location.lng}`;
+            });
+        }
+    </script>
+</body>
+</html>
