@@ -1,25 +1,134 @@
 <!DOCTYPE html>
-<html>
+<html lang="fa">
 <head>
-    <title>📍 نمایش موقعیت</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📍 نمایش موقعیت زنده</title>
     <style>
-        body { font-family: sans-serif; text-align: center; padding: 20px; }
-        #map { width: 90%; height: 400px; margin: 20px auto; border: 2px solid #333; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 800px;
+            margin: 0 auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            font-size: 28px;
+            margin-bottom: 10px;
+        }
+        #status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 20px;
+            border-radius: 15px;
+            margin: 20px 0;
+            font-size: 18px;
+            min-height: 100px;
+        }
+        .location-card {
+            background: rgba(255, 255, 255, 0.15);
+            border-radius: 15px;
+            padding: 20px;
+            margin: 15px 0;
+            text-align: right;
+            direction: rtl;
+        }
+        .map-placeholder {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: 15px;
+            height: 300px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            margin: 20px 0;
+            font-size: 20px;
+        }
+        .connected-users {
+            display: flex;
+            justify-content: center;
+            gap: 15px;
+            flex-wrap: wrap;
+            margin-top: 30px;
+        }
+        .user-badge {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 10px 20px;
+            border-radius: 50px;
+            font-size: 14px;
+        }
+        .instructions {
+            background: rgba(255, 255, 255, 0.1);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 30px;
+            font-size: 14px;
+            text-align: right;
+            direction: rtl;
+        }
     </style>
 </head>
 <body>
-    <h1>📍 موقعیت زنده کاربر</h1>
-    <div id="map">نقشه در حال بارگذاری...</div>
-    <p id="status">در انتظار دریافت موقعیت...</p>
+    <div class="container">
+        <h1>📍 نمایش موقعیت زنده اعضای خانواده</h1>
+        <p>موقعیت اعضا به صورت لحظه‌ای در این صفحه نمایش داده می‌شود</p>
+        
+        <div class="map-placeholder">
+            🗺️ نقشه موقعیت‌های زنده
+        </div>
+        
+        <div id="status">
+            ⏳ در انتظار دریافت موقعیت...
+        </div>
+        
+        <div class="instructions">
+            📌 راهنما:<br>
+            1. هر عضو باید در موبایل خود صفحه ارسال موقعیت را باز کند<br>
+            2. روی دکمه "ارسال موقعیت" کلیک کند<br>
+            3. موقعیت در این صفحه به طور زنده نمایش داده می‌شود
+        </div>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
+        const statusElement = document.getElementById('status');
+        let lastUpdate = null;
+
         socket.on('update', (data) => {
-            document.getElementById('status').innerHTML = 
-                `آخرین موقعیت: ${data.lat}, ${data.lng}`;
+            const now = new Date();
+            lastUpdate = now;
+            
+            statusElement.innerHTML = `
+                <div class="location-card">
+                    <strong>📍 موقعیت دریافت شد</strong><br>
+                    <br>
+                    <strong>مختصات:</strong> ${data.lat.toFixed(6)}, ${data.lng.toFixed(6)}<br>
+                    <strong>زمان:</strong> ${now.toLocaleTimeString('fa-IR')}<br>
+                    <strong>کاربر:</strong> ${data.userId.substring(0, 8)}...
+                </div>
+            `;
+            
             console.log('موقعیت دریافت شد:', data);
         });
+
+        // آپدیت وضعیت هر ۱۰ ثانیه
+        setInterval(() => {
+            if (lastUpdate) {
+                const secondsAgo = Math.floor((new Date() - lastUpdate) / 1000);
+                if (secondsAgo > 30) {
+                    statusElement.innerHTML += `<br><small>⏰ آخرین آپدیت: ${secondsAgo} ثانیه پیش</small>`;
+                }
+            }
+        }, 10000);
     </script>
 </body>
 </html>

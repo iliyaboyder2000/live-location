@@ -2,10 +2,11 @@ const express = require('express');
 const http = require('http');
 const { Server } = require('socket.io');
 const cors = require('cors');
+const path = require('path');
 
 const app = express();
 app.use(cors());
-app.use(express.static('.'));
+app.use(express.static(path.join(__dirname)));
 
 const server = http.createServer(app);
 const io = new Server(server);
@@ -26,6 +27,7 @@ io.on('connection', (socket) => {
   });
 });
 
-server.listen(3000, () => {
-  console.log('🚀 سرور اجرا شد: http://localhost:3000');
+const PORT = process.env.PORT || 3000;
+server.listen(PORT, () => {
+  console.log(`🚀 سرور اجرا شد: http://localhost:${PORT}`);
 });

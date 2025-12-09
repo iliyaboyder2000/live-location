@@ -1,40 +1,132 @@
 <!DOCTYPE html>
-<html>
+<html lang="fa">
 <head>
-    <title>📱 ارسال موقعیت</title>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>📱 ارسال موقعیت من</title>
     <style>
-        body { font-family: sans-serif; padding: 20px; }
-        button { padding: 15px; font-size: 18px; margin: 10px; }
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            text-align: center;
+            padding: 20px;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            color: white;
+            min-height: 100vh;
+        }
+        .container {
+            background: rgba(255, 255, 255, 0.1);
+            backdrop-filter: blur(10px);
+            border-radius: 20px;
+            padding: 30px;
+            max-width: 400px;
+            margin: 0 auto;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.2);
+        }
+        h1 {
+            font-size: 24px;
+            margin-bottom: 20px;
+        }
+        button {
+            background: linear-gradient(45deg, #FF416C, #FF4B2B);
+            color: white;
+            border: none;
+            padding: 18px 30px;
+            font-size: 18px;
+            border-radius: 50px;
+            cursor: pointer;
+            width: 100%;
+            margin: 20px 0;
+            transition: transform 0.3s;
+            box-shadow: 0 4px 15px rgba(255, 65, 108, 0.4);
+        }
+        button:hover {
+            transform: translateY(-3px);
+        }
+        #status {
+            background: rgba(255, 255, 255, 0.2);
+            padding: 15px;
+            border-radius: 10px;
+            margin-top: 20px;
+            font-size: 16px;
+        }
+        .info {
+            font-size: 14px;
+            opacity: 0.8;
+            margin-top: 30px;
+        }
     </style>
 </head>
 <body>
-    <h1>📱 ارسال موقعیت من</h1>
-    <button onclick="sendLocation()">📍 منو ساحل</button>
-    <p id="status">روی دکمه بالا بزن</p>
+    <div class="container">
+        <h1>📍 ارسال موقعیت زنده</h1>
+        <p>برای اطلاع خانواده از موقعیت شما</p>
+        
+        <button onclick="sendLocation()">
+            📍 ارسال موقعیت فعلی من
+        </button>
+        
+        <div id="status">
+            روی دکمه بالا کلیک کنید
+        </div>
+        
+        <div class="info">
+            ✅ موقعیت شما فقط برای خانواده قابل مشاهده است<br>
+            🔒 امنیت اطلاعات شما حفظ می‌شود
+        </div>
+    </div>
 
     <script src="/socket.io/socket.io.js"></script>
     <script>
         const socket = io();
         const userId = 'user_' + Math.random().toString(36).substr(2, 9);
+        let isSending = false;
 
         function sendLocation() {
+            if (isSending) return;
+            isSending = true;
+            
             if (!navigator.geolocation) {
-                alert('مرورگر شما GPS را ساپورت نمی‌کند!');
+                alert('مرورگر شما GPS را پشتیبانی نمی‌کند!');
+                isSending = false;
                 return;
             }
 
-            navigator.geolocation.getCurrentPosition((pos) => {
-                const location = {
-                    userId: userId,
-                    lat: pos.coords.latitude,
-                    lng: pos.coords.longitude,
-                    time: new Date().toLocaleTimeString()
-                };
+            document.getElementById('status').innerHTML = '🔄 در حال دریافت موقعیت...';
+            
+            navigator.geolocation.getCurrentPosition(
+                (pos) => {
+                    const location = {
+                        userId: userId,
+                        lat: pos.coords.latitude,
+                        lng: pos.coords.longitude,
+                        time: new Date().toLocaleTimeString('fa-IR'),
+                        accuracy: pos.coords.accuracy
+                    };
 
-                socket.emit('location', location);
-                document.getElementById('status').innerHTML = 
-                    `ارسال شد: ${location.lat}, ${location.lng}`;
-            });
+                    socket.emit('location', location);
+                    document.getElementById('status').innerHTML = 
+                        `✅ موقعیت ارسال شد<br>
+                         📍 مختصات: ${location.lat.toFixed(6)}, ${location.lng.toFixed(6)}<br>
+                         🕐 زمان: ${location.time}`;
+                    
+                    isSending = false;
+                },
+                (error) => {
+                    let errorMsg = 'خطا در دریافت موقعیت: ';
+                    switch(error.code) {
+                        case 1: errorMsg += 'دسترسی رد شد'; break;
+                        case 2: errorMsg += 'موقعیت یافت نشد'; break;
+                        case 3: errorMsg += 'زمان دریافت به پایان رسید'; break;
+                    }
+                    document.getElementById('status').innerHTML = errorMsg;
+                    isSending = false;
+                },
+                {
+                    enableHighAccuracy: true,
+                    timeout: 10000,
+                    maximumAge: 0
+                }
+            );
         }
     </script>
 </body>
